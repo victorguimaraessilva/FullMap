@@ -16,7 +16,7 @@ performance.
 
 # Google Fusion Table URL
 
-https://fusiontables.google.com/embedviz?viz=GVIZ&t=TABLE&q=select+col0%2C+col1%2C+col2%2C+col3%2C+col4%2C+col5%2C+col6+from+1MMiXyaFVQJAdmLg7JDwzimeY817fFt05IfLGE3Em&containerId=googft-gviz-canvas
+https://www.google.com/fusiontables/DataSource?docid=16IQoLcCIq_hJV35YFbN1cqTqV6yTtLe0aNOBEWCN
 
 ## Building
 
