@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <title>FullMap</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+   
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.3.3/dist/leaflet.css" integrity="sha512-Rksm5RenBEKSKFjgI3a41vrjkw4EVPlJ3+OiI65vTjIdo9brlAacEuKOiQ5OFh7cOI1bkDwLqdLw3Zg0cRJAAQ==" crossorigin="" />
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css" integrity="sha384-Gn5384xqQ1aoWXA+058RXPxPg6fy4IWvTNh0E263XmFcJlSAwiGgFAW/dAiS6JXm" crossorigin="anonymous">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/4.1.1/css/bootstrap.css"></script>
+    <link rel="stylesheet" href="https://cdn.datatables.net/1.10.19/css/dataTables.bootstrap4.min.css"></script>
+    <script src="https://code.jquery.com/jquery-3.2.1.min.js"></script>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
+    <script src="https://unpkg.com/leaflet@1.3.3/dist/leaflet.js" integrity="sha512-tAGcCfR4Sc5ZP5ZoVz0quoZDYX5aCtEm/eu1KhSLj2c9eFrylXZknQYmxUssFaVJKvvc0dJQixhGjG2yXWiV9Q==" crossorigin=""></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.12.9/umd/popper.min.js" integrity="sha384-ApNbgh9B+Y1QKtv3Rn7W3mgPxhU9K/ScQsAP7hUibX39j7fakFPskvXusvfa0b4Q" crossorigin="anonymous"></script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/js/bootstrap.min.js" integrity="sha384-JZR6Spejh4U02d8jOt6vLEHfe/JQGiRRSQQxSfFWpi1MquVdAyjUar5+76PVCmYl" crossorigin="anonymous"></script>
+    <script src="https://cdn.datatables.net/1.10.19/js/jquery.dataTables.min.js"></script>
+    <script src="https://cdn.datatables.net/1.10.19/js/dataTables.bootstrap4.min.js"></script>
+    
+    <style>
+      body {
+        background-color: #f2efe9;
+      }
+      #map {
+          height: 350px;
+          width: 100%;
+          margin-bottom: 20px;
+      }
+  </style>
+  </head>
+  <body>
+    <div class="container-fluid">
+      <div class="content">
+
+        <div id="map"></div>
+      
+        <table class="table table-striped table-dark" id="table">
+          <thead>
+            <tr>
+              <th scope="col" width="5%">#</th>
+              <th scope="col" width="10%">Latitude</th>
+              <th scope="col" width="10%">Longitude</th>
+              <th scope="col">Address</th>
+            </tr>
+          </thead>
+          <tbody>
+            
+          </tbody>
+        </table>
+      </div>
+    
+    </div>
+
+    <script type="text/javascript">
+
+      var counter = 1;
+      var client_id = '653034726745-iqvd2uq0ec32d2ijt0f66qs718tjcpo4.apps.googleusercontent.com'
+      var client_secret = 'cGVVbRlS6uHcpn4lD33jthWF'
+      var api_key = 'AIzaSyBVc8QA5hf1i4Pdy-DYc0EUANtBWWySxcs';
+      var table_id = '16IQoLcCIq_hJV35YFbN1cqTqV6yTtLe0aNOBEWCN';
+
+      function get_auth() {
+        
+        let url = "https://www.googleapis.com/auth/fusiontables";
+        $.ajax({
+          type: 'POST',
+          url: url,
+          headers: {
+            "Authorization": "Bearer "+api_key,
+          },
+          dataType: 'json',
+          success: function(res) {
+            console.log(res);
+          }
+        });
+
+
+      }
+
+      function get_locations(table) {
+
+        let url = "https://www.googleapis.com/fusiontables/v2/query?sql=SELECT * FROM "+table_id+"&key="+api_key;
+
+        $.ajax({
+          type: 'GET',
+          url: url,
+          dataType: 'json',
+          success: function(res) {
+
+            if (res && res.rows) {
+
+              let locations = res.rows;
+              
+              locations.forEach(function(location) {
+                table.row.add([counter, location[1], location[2], location[3]]).draw( false );
+                counter++;
+              });
+            }
+          }
+        });
+      }
+
+      function set_location(table, lat, lng, full_address) {
+
+        let url = "https://www.googleapis.com/fusiontables/v2/query?key="+api_key;
+        let statement = "INSERT INTO "+table_id+" (latitude, longitude, full_address) VALUES ("+lat+", "+lng+", '"+full_address+"');"
+
+        $.ajax({
+          type: 'POST',
+          url: url,
+          data: { "sql": statement },
+          dataType: 'json',
+          success: function(res) {
+
+            if (res && res.rows) {
+
+              let locations = res.rows;
+              
+              locations.forEach(function(location) {
+                table.row.add([counter, location[1], location[2], location[3]]).draw( false );
+                counter++;
+              });
+            }
+          }
+        });
+      }
+
+      function address_search(lat, lng, table) {
+
+        let url = "https://nominatim.openstreetmap.org/reverse?format=json&lat="+lat+"&lon="+lng+"&zoom=16";
+          
+        $.ajax({
+          type: 'GET',
+          url: url,
+          dataType: 'json',
+          success: function(res) {
+            table.row.add([counter, lat, lng, res['display_name']]).draw( false );
+            set_location(table, lat, lng, res['display_name']);
+            counter++;
+          }
+        });
+      }
+
+      $(document).ready(function() {
+
+        var map = L.map('map').setView([-18.91821900, -48.29997200], 13);
+       
+        var table = $('#table').DataTable({
+          "iDisplayLength": 3,
+          "order" :[[0,"desc"]],
+          "aLengthMenu": [[3, 10, -1], [3, 10, "All"]]
+        });
+
+        get_locations(table);
+
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            attribution: '<a href="https://openstreetmap.org">FullMap</a>',
+            zIndex: 1,
+            maxZoom: 30
+        }).addTo(map);
+
+        map.on('click', function(e) {
+          
+          let lat = e.latlng.lat;
+          let lng = e.latlng.lng;
+
+          address_search(lat.toFixed(8), lng.toFixed(8), table);
+          L.marker([lat, lng]).addTo(map);
+
+        });
+      });
+      
+    </script>
+  </body>
+  
+</html>
